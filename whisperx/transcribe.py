@@ -35,13 +35,13 @@ def cli():
     # alignment params
     parser.add_argument("--align_model", default=None, help="Name of phoneme-level ASR model to do alignment")
     parser.add_argument("--interpolate_method", default="nearest", choices=["nearest", "linear", "ignore"], help="For word .srt, method to assign timestamps to non-aligned words, or merge them into neighbouring.")
-    parser.add_argument("--no_align", action='store_true', help="Do not perform phoneme alignment")
+    parser.add_argument("--no_align", action='store_true', default = True, help="Do not perform phoneme alignment")
     parser.add_argument("--return_char_alignments", action='store_true', help="Return character-level alignments in the output json file")
 
     # vad params
     parser.add_argument("--vad_onset", type=float, default=0.500, help="Onset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected")
     parser.add_argument("--vad_offset", type=float, default=0.363, help="Offset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected.")
-    parser.add_argument("--chunk_size", type=int, default=30, help="Chunk size for merging VAD segments. Default is 30, reduce this if the chunk is too long.")
+    parser.add_argument("--chunk_size", type=int, default=5, help="Chunk size for merging VAD segments. Default is 30, reduce this if the chunk is too long.")
 
     # diarization params
     parser.add_argument("--diarize", action="store_true", help="Apply diarization to assign speaker labels to each segment/word")
@@ -75,7 +75,7 @@ def cli():
 
     parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face Access Token to access PyAnnote gated models")
 
-    parser.add_argument("--print_progress", type=str2bool, default = False, help = "if True, progress will be printed in transcribe() and align() methods.")
+    parser.add_argument("--print_progress", type=str2bool, default = True, help = "if True, progress will be printed in transcribe() and align() methods.")
     # fmt: on
 
     args = parser.parse_args().__dict__
