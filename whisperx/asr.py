@@ -12,6 +12,8 @@ from transformers.pipelines.pt_utils import PipelineIterator
 from .audio import N_SAMPLES, SAMPLE_RATE, load_audio, log_mel_spectrogram
 from .vad import load_vad_model, merge_chunks
 from .types import TranscriptionResult, SingleSegment
+#显示进度条
+from tqdm import tqdm
 
 def find_numeral_symbol_tokens(tokenizer):
     numeral_symbol_tokens = []
@@ -215,11 +217,16 @@ class FasterWhisperPipeline(Pipeline):
         segments: List[SingleSegment] = []
         batch_size = batch_size or self._batch_size
         total_segments = len(vad_segments)
+        #根据参数选择是否显示进度条
+        if print_progress:
+          pbar = tqdm(total=total_segments) 
+        else:
+          pbar = None
+
         for idx, out in enumerate(self.__call__(data(audio, vad_segments), batch_size=batch_size, num_workers=num_workers)):
+            #更新翻译进度条
             if print_progress:
-                base_progress = ((idx + 1) / total_segments) * 100
-                percent_complete = base_progress / 2 if combined_progress else base_progress
-                print(f"Progress: {percent_complete:.2f}%...")
+                pbar.update(1)
             text = out['text']
             if batch_size in [0, 1, None]:
                 text = text[0]
@@ -238,9 +245,10 @@ class FasterWhisperPipeline(Pipeline):
         # revert suppressed tokens if suppress_numerals is enabled
         if self.suppress_numerals:
             self.options = self.options._replace(suppress_tokens=previous_suppress_tokens)
-
+        #循环结束关闭进度条  
+        if pbar: 
+          pbar.close()        
         return {"segments": segments, "language": language}
-
 
     def detect_language(self, audio: np.ndarray):
         if audio.shape[0] < N_SAMPLES:
