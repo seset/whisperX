@@ -20,9 +20,12 @@ class DiarizationPipeline:
     ):
         if isinstance(device, str):
             device = torch.device(device)
-        model_config = model_name or "pyannote/speaker-diarization-community-1"
+        # offline 本地写死路径    
+        # model_config = model_name or "pyannote/speaker-diarization-community-1" 
+        model_config = "/path/to/your/directory/speaker-diarization-community-1"
         logger.info(f"Loading diarization model: {model_config}")
-        self.model = Pipeline.from_pretrained("pyannote/speaker-diarization-community-1", token=token).to(device)
+        # self.model = Pipeline.from_pretrained("pyannote/speaker-diarization-community-1", token=token).to(device)
+        self.model = Pipeline.from_pretrained(model_config, token=token).to(device)
     '''
     For offline use:
     # when prompted for a password, use an access token with write permissions.
