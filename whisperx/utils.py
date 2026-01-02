@@ -221,9 +221,16 @@ class ResultWriter:
     def __call__(self, result: dict, audio_path: str, options: dict):
         audio_basename = os.path.basename(audio_path)
         audio_basename = os.path.splitext(audio_basename)[0]
-        output_path = os.path.join(
-            self.output_dir, audio_basename + "." + self.extension
-        )
+        # 保存带有语言标识的字幕
+        language = result.get("language", "")
+        if language:
+            output_path = os.path.join(
+                self.output_dir, f"{audio_basename}.{language}.{self.extension}"
+            )
+        else:
+            output_path = os.path.join(
+                self.output_dir, audio_basename + "." + self.extension
+            )
 
         with open(output_path, "w", encoding="utf-8") as f:
             self.write_result(result, file=f, options=options)
