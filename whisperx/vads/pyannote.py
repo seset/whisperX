@@ -43,7 +43,7 @@ def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, token=None, model_
     vad_model = Model.from_pretrained(model_fp, token=token)
     hyperparameters = {"onset": vad_onset,
                     "offset": vad_offset,
-                    "min_duration_on": 0.1,
+                    "min_duration_on": 0.05,
                     "min_duration_off": 0.1}
     vad_pipeline = VoiceActivitySegmentation(segmentation=vad_model, device=torch.device(device))
     vad_pipeline.instantiate(hyperparameters)
