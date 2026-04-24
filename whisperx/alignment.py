@@ -25,6 +25,7 @@ from whisperx.schema import (
 import nltk
 from nltk.data import load as nltk_load
 from whisperx.log_utils import get_logger
+from tqdm import tqdm
 
 logger = get_logger(__name__)
 
@@ -103,7 +104,7 @@ def load_align_model(language_code: str, device: str, model_name: Optional[str] 
         except Exception as e:
             print(e)
             print(f"Error loading model from huggingface, check https://huggingface.co/models for finetuned wav2vec2.0 models")
-            raise ValueError(f'The chosen align_model "{model_name}" could not be found in huggingface (https://huggingface.co/models) or torchaudio (https://pytorch.org/audio/stable/pipelines.html#id14)')
+            raise ValueError(f'The chosen align_model "{model_name}" could not be found in huggingface(https://huggingface.co/models) or torchaudio(https://pytorch.org/audio/stable/pipelines.html#id14)')
         pipeline_type = "huggingface"
         align_model = align_model.to(device)
         labels = processor.tokenizer.get_vocab()
@@ -146,12 +147,16 @@ def align(
     total_segments = len(transcript)
     # Store temporary processing values
     segment_data: dict[int, SegmentData] = {}
-    for sdx, segment in enumerate(transcript):
+    
+    transcript_iter = transcript
+    if print_progress:
+        transcript_iter = tqdm(transcript, total=total_segments, desc="Pre-processing segments")
+    
+    for sdx, segment in enumerate(transcript_iter):
         # strip spaces at beginning / end, but keep track of the amount.
-        if print_progress:
-            base_progress = ((sdx + 1) / total_segments) * 100
-            percent_complete = (50 + base_progress / 2) if combined_progress else base_progress
-            print(f"Progress: {percent_complete:.2f}%...")
+        if print_progress and not combined_progress:
+            # Original print logic, but tqdm handles it now
+            pass
 
         num_leading = len(segment["text"]) - len(segment["text"].lstrip())
         num_trailing = len(segment["text"]) - len(segment["text"].rstrip())
@@ -211,7 +216,13 @@ def align(
     aligned_segments: List[SingleAlignedSegment] = []
 
     # 2. Get prediction matrix from alignment model & align
-    for sdx, segment in enumerate(transcript):
+    
+    transcript_iter = transcript
+    if print_progress:
+        start_progress = 50 if combined_progress else 0
+        transcript_iter = tqdm(transcript, total=total_segments, desc="Aligning segments")
+    
+    for sdx, segment in enumerate(transcript_iter):
 
         t1 = segment["start"]
         t2 = segment["end"]
