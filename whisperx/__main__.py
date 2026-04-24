@@ -58,7 +58,7 @@ def cli():
     parser.add_argument("--suppress_tokens", type=str, default="-1", help="comma-separated list of token ids to suppress during sampling; '-1' will suppress most special characters except common punctuations")
     parser.add_argument("--suppress_numerals", action="store_true", help="whether to suppress numeric symbols and currency symbols during sampling, since wav2vec2 cannot align them correctly")
 
-    parser.add_argument("--initial_prompt", type=str, default="あの……田中さん……。あっ、ちょっと待って……んっ……そんな、急に……恥ずかしいです……。", help="optional text to provide as a prompt for the first window.")
+    parser.add_argument("--initial_prompt", type=str, default=None, help="optional text to provide as a prompt for the first window.")
     parser.add_argument("--hotwords", type=str, default="", help="hotwords/hint phrases to the model (e.g. \"WhisperX, PyAnnote, GPU\"); improves recognition of rare/technical terms")
     parser.add_argument("--condition_on_previous_text", type=str2bool, default=False, help="if True, provide the previous output of the model as a prompt for the next window; disabling may make the text inconsistent across windows, but the model becomes less prone to getting stuck in a failure loop")
     parser.add_argument("--fp16", type=str2bool, default=True, help="whether to perform inference in fp16; True by default")
@@ -85,6 +85,22 @@ def cli():
     # fmt: on
 
     args = parser.parse_args().__dict__
+
+    # 👇👇👇 新增：根据语言动态分配专属 Initial Prompt 👇👇👇
+    if args.get("initial_prompt") is None:
+        lang = args.get("language")
+        
+        if lang == "ja":
+            # 日语专属：带有「」和标点锚点的极品 Prompt
+            args["initial_prompt"] = "「失礼します、先生……。」「ああ、入って。……で、どうしたの？」「あの……先生……。あっ、ちょっと待って……んっ……そんな、急に……恥ずかしいです……っ。」"      
+        elif lang == "en":
+            # 英文专属
+            args["initial_prompt"] = "-Hello-, -Umm...-, -Wait a minute...-, -Yeah, I like that...right there...-, -Oh, god!- "
+        else:
+            # 其他语言的保底兜底方案 (或者干脆留空 "")
+            args["initial_prompt"] = ""
+        print(f"\n[Prompt Config] 自动分配 {lang} 专属 Initial Prompt")    
+    # 👆👆👆 新增结束 👆👆👆
 
     log_level = args.get("log_level")
     verbose = args.get("verbose")
