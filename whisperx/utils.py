@@ -386,6 +386,17 @@ class WriteSRT(SubtitlesWriter):
         for i, (start, end, text) in enumerate(
             self.iterate_result(result, options), start=1
         ):
+            # ===== 新增：强力去重拦截网 =====
+            # 1. 消除隐藏空格陷阱（日文输出中常带有不可见空格打断正则）
+            text = text.replace(" ", "").replace("　", "")
+            
+            # 2. 词组级去重 (例如：やめてやめてやめてやめて -> やめてやめてやめて)
+            text = re.sub(r'(.+?)\1{3,}', r'\1\1\1', text)
+            
+            # 3. 单字符级去重 (例如：あああああ -> あああ)
+            text = re.sub(r'(.)\1{3,}', r'\1\1\1', text)
+            # ==============================
+
             print(f"{i}\n{start} --> {end}\n{text}\n", file=file, flush=True)
 
 
