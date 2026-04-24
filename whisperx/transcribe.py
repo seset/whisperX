@@ -64,6 +64,9 @@ def transcribe_task(args: dict, parser: argparse.ArgumentParser):
     print_progress: bool = args.pop("print_progress")
     return_speaker_embeddings: bool = args.pop("speaker_embeddings")
 
+    # 👇 新增：把我们的双语翻译参数提取出来，默认 False 防报错
+    bilingual_translate: bool = args.pop("bilingual_translate", False)
+
     if return_speaker_embeddings and not diarize:
         warnings.warn("--speaker_embeddings has no effect without --diarize")
 
@@ -235,3 +238,28 @@ def transcribe_task(args: dict, parser: argparse.ArgumentParser):
     for result, audio_path in results:
         result["language"] = align_language
         writer(result, audio_path, writer_args)
+
+    # 👇👇👇 新增：自定义双语拦截唤醒流程 👇👇👇
+    if bilingual_translate:
+        import subprocess
+        import sys
+        
+        logger.info("[Bilingual] 字幕落盘完毕，正在彻底清空显存残留...")
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        # 动态获取当前 transcribe.py 所在的目录（也就是你放 trans.py 的地方）
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        trans_script_path = os.path.join(current_dir, "trans.py")
+
+        logger.info(f"[Bilingual] 启动外部翻译引擎，扫描目录: {output_dir}")
+        try:
+            # 关键：cwd=output_dir 强制把 trans.py 的视线锁定在刚输出字幕的文件夹
+            subprocess.run([sys.executable, trans_script_path], cwd=output_dir, check=True)
+            logger.info("[Bilingual] 本地双语翻译流水线全部执行完毕！")
+        except FileNotFoundError:
+            logger.error(f"[Bilingual] 严重错误：在 {trans_script_path} 未找到 trans.py")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"[Bilingual] 翻译脚本运行异常退出: {e}")
+    # 👆👆👆 新增结束 👆👆👆
