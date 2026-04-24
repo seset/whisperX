@@ -38,8 +38,8 @@ def cli():
 
     # vad params
     parser.add_argument("--vad_method", type=str, default="pyannote", choices=["pyannote", "silero"], help="VAD method to be used")
-    parser.add_argument("--vad_onset", type=float, default=0.01, help="Onset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected")
-    parser.add_argument("--vad_offset", type=float, default=0.01, help="Offset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected.")
+    parser.add_argument("--vad_onset", type=float, default=0.001, help="Onset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected")
+    parser.add_argument("--vad_offset", type=float, default=0.001, help="Offset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected.")
     parser.add_argument("--chunk_size", type=int, default=10, help="Chunk size for merging VAD segments. Default is 30, reduce this if the chunk is too long.")
 
     # diarization params
@@ -59,7 +59,7 @@ def cli():
     parser.add_argument("--suppress_numerals", action="store_true", help="whether to suppress numeric symbols and currency symbols during sampling, since wav2vec2 cannot align them correctly")
 
     parser.add_argument("--initial_prompt", type=str, default=None, help="optional text to provide as a prompt for the first window.")
-    parser.add_argument("--hotwords", type=str, default="", help="hotwords/hint phrases to the model (e.g. \"WhisperX, PyAnnote, GPU\"); improves recognition of rare/technical terms")
+    parser.add_argument("--hotwords", type=str, default=None, help="hotwords/hint phrases to the model (e.g. \"WhisperX, PyAnnote, GPU\"); improves recognition of rare/technical terms")
     parser.add_argument("--condition_on_previous_text", type=str2bool, default=False, help="if True, provide the previous output of the model as a prompt for the next window; disabling may make the text inconsistent across windows, but the model becomes less prone to getting stuck in a failure loop")
     parser.add_argument("--fp16", type=str2bool, default=True, help="whether to perform inference in fp16; True by default")
 
@@ -92,7 +92,7 @@ def cli():
         
         if lang == "ja":
             # 日语专属：带有「」和标点锚点的极品 Prompt
-            args["initial_prompt"] = "「失礼します、先生……。」「ああ、入って。……で、どうしたの？」「あの……先生……。あっ、ちょっと待って……んっ……そんな、急に……恥ずかしいです……っ。」"      
+            args["initial_prompt"] = "【雨の音】「失礼します、先生……。」【ドアが開く音】「ああ、入って。……で、今日はどうしたの？」「あの……実は……。」【遠くの雷鳴】"  
         elif lang == "en":
             # 英文专属
             args["initial_prompt"] = "-Hello-, -Umm...-, -Wait a minute...-, -Yeah, I like that...right there...-, -Oh, god!- "
