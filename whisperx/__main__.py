@@ -92,7 +92,7 @@ def cli():
         
         if lang == "ja":
             # 日语专属：带有「」和标点锚点的极品 Prompt
-            args["initial_prompt"] = "【雨の音】「失礼します、先生……。」【ドアが開く音】「ああ、入って。……で、今日はどうしたの？」「あの……実は……。」【遠くの雷鳴】"  
+            args["initial_prompt"] = "【環境音】「失礼します、先生……。」「ああ、入って。……で、どうしたの？」「あの……あっ、ちょっと待って……んっ……そんな……恥ずかしいです……っ。」"
         elif lang == "en":
             # 英文专属
             args["initial_prompt"] = "-Hello-, -Umm...-, -Wait a minute...-, -Yeah, I like that...right there...-, -Oh, god!- "
