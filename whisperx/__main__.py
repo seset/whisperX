@@ -9,6 +9,7 @@ from whisperx.utils import (LANGUAGES, TO_LANGUAGE_CODE, optional_float,
 from whisperx.log_utils import setup_logging
 
 
+
 def cli():
     # fmt: off
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -18,7 +19,7 @@ def cli():
     parser.add_argument("--model_dir", type=str, default=None, help="the path to save model files; uses ~/.cache/whisper by default")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu", help="device to use for PyTorch inference")
     parser.add_argument("--device_index", default=0, type=int, help="device index to use for FasterWhisper inference")
-    parser.add_argument("--batch_size", default=10, type=int, help="the preferred batch size for inference")
+    parser.add_argument("--batch_size", default=16, type=int, help="the preferred batch size for inference")
     parser.add_argument("--compute_type", default="float16", type=str, choices=["float16", "float32", "int8"], help="compute type for computation")
 
     parser.add_argument("--output_dir", "-o", type=str, default=".", help="directory to save the outputs")
@@ -79,6 +80,8 @@ def cli():
     parser.add_argument("--print_progress", type=str2bool, default = True, help = "if True, progress will be printed in transcribe() and align() methods.")
     parser.add_argument("--version", "-V", action="version", version=f"%(prog)s {importlib.metadata.version('whisperx')}",help="Show whisperx version information and exit")
     parser.add_argument("--python-version", "-P", action="version", version=f"Python {platform.python_version()} ({platform.python_implementation()})",help="Show python version information and exit")
+
+    parser.add_argument("--bilingual_translate", default=True, action="store_true", help="启用自定义模型进行双语翻译拦截")
     # fmt: on
 
     args = parser.parse_args().__dict__
