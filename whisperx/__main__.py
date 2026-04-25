@@ -8,18 +8,21 @@ from whisperx.utils import (LANGUAGES, TO_LANGUAGE_CODE, optional_float,
                             optional_int, str2bool)
 from whisperx.log_utils import setup_logging
 
+import os
+# ===== 新增：Hugging Face 全局物理断网开关 =====
+os.environ["HF_HUB_OFFLINE"] = "1"
 
 
 def cli():
     # fmt: off
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("audio", nargs="+", type=str, help="audio file(s) to transcribe")
-    parser.add_argument("--model", default="large-v2", help="name of the Whisper model to use")
+    parser.add_argument("--model", default="large-v2", help="name of the Whisper model to use") #只有large-v2才能很好识别环境音
     parser.add_argument("--model_cache_only", type=str2bool, default=False, help="If True, will not attempt to download models, instead using cached models from --model_dir")
     parser.add_argument("--model_dir", type=str, default=None, help="the path to save model files; uses ~/.cache/whisper by default")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu", help="device to use for PyTorch inference")
     parser.add_argument("--device_index", default=0, type=int, help="device index to use for FasterWhisper inference")
-    parser.add_argument("--batch_size", default=16, type=int, help="the preferred batch size for inference")
+    parser.add_argument("--batch_size", default=10, type=int, help="the preferred batch size for inference")
     parser.add_argument("--compute_type", default="float16", type=str, choices=["float16", "float32", "int8"], help="compute type for computation")
 
     parser.add_argument("--output_dir", "-o", type=str, default=".", help="directory to save the outputs")
@@ -38,9 +41,9 @@ def cli():
 
     # vad params
     parser.add_argument("--vad_method", type=str, default="pyannote", choices=["pyannote", "silero"], help="VAD method to be used")
-    parser.add_argument("--vad_onset", type=float, default=0.001, help="Onset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected")
-    parser.add_argument("--vad_offset", type=float, default=0.001, help="Offset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected.")
-    parser.add_argument("--chunk_size", type=int, default=10, help="Chunk size for merging VAD segments. Default is 30, reduce this if the chunk is too long.")
+    parser.add_argument("--vad_onset", type=float, default=0.1, help="Onset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected")
+    parser.add_argument("--vad_offset", type=float, default=0.05, help="Offset threshold for VAD (see pyannote.audio), reduce this if speech is not being detected.")
+    parser.add_argument("--chunk_size", type=int, default=6, help="Chunk size for merging VAD segments. Default is 30, reduce this if the chunk is too long.")
 
     # diarization params
     parser.add_argument("--diarize", action="store_true", help="Apply diarization to assign speaker labels to each segment/word")
@@ -86,21 +89,22 @@ def cli():
 
     args = parser.parse_args().__dict__
 
-    # 👇👇👇 新增：根据语言动态分配专属 Initial Prompt 👇👇👇
+    # 新增：根据语言动态分配专属 Initial Prompt 
     if args.get("initial_prompt") is None:
         lang = args.get("language")
         
         if lang == "ja":
             # 日语专属：带有「」和标点锚点的极品 Prompt
-            args["initial_prompt"] = "【環境音】「失礼します、先生……。」「ああ、入って。……で、どうしたの？」「あの……あっ、ちょっと待って……んっ……そんな……恥ずかしいです……っ。」"
+            # args["initial_prompt"] = "【環境音】「失礼します、先生……。」「ああ、入って。……で、どうしたの？」「あの……あっ、ちょっと待って……んっ……そんな……恥ずかしいです……っ。」"
+            args["initial_prompt"] = "【環境音】「えっ！？……先輩、これって『秘密の特訓』ですか〜？」「ああ、そうだよ。……大丈夫！」「あっ……すごいっ！」「んっ……そんな……恥ずかしいです……っ。」"
         elif lang == "en":
             # 英文专属
-            args["initial_prompt"] = "-Hello-, -Umm...-, -Wait a minute...-, -Yeah, I like that...right there...-, -Oh, god!- "
+            args["initial_prompt"] = "[Ambient sound] - Hello... - Um, wait a minute... - Yeah, I like that... right there... - Oh, god..."
         else:
             # 其他语言的保底兜底方案 (或者干脆留空 "")
             args["initial_prompt"] = ""
         print(f"\n[Prompt Config] 自动分配 {lang} 专属 Initial Prompt")    
-    # 👆👆👆 新增结束 👆👆👆
+    # 新增结束 
 
     log_level = args.get("log_level")
     verbose = args.get("verbose")
