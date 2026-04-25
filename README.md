@@ -89,13 +89,13 @@ uvx whisperx
 If you want to use WhisperX with CUDA (GPU acceleration) via uv, use the following commands ( Python >= 3.10, < 3.14 ):
 
 ```bash
-uv tool install --python 3.13 --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match whisperx
+uv tool install --python 3.10 --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match whisperx
 ```
 
 Or if using uvx:
 
 ```bash
-uvx --python 3.13 --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match whisperx
+uvx --python 3.10 --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match whisperx
 ```
 
 ### 2. Advanced Installation Options
