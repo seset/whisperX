@@ -100,8 +100,6 @@ uvx --python 3.13 --extra-index-url https://download.pytorch.org/whl/cu128 --ind
 
 ### 2. Advanced Installation Options
 
-### 2. Advanced Installation Options
-
 These installation methods are for developers or users with specific needs. If you're not sure, stick with the simple installation above.
 
 #### Option A: Install from GitHub
