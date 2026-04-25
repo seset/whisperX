@@ -383,22 +383,47 @@ class WriteSRT(SubtitlesWriter):
     decimal_marker: str = ","
 
     def write_result(self, result: dict, file: TextIO, options: dict):
-        for i, (start, end, text) in enumerate(
-            self.iterate_result(result, options), start=1
-        ):
-            # ===== 新增：强力去重拦截网 =====
-            # 1. 消除隐藏空格陷阱（日文输出中常带有不可见空格打断正则）
+        # ===== 修改点 1：手动维护一个真实的字幕序号 =====
+        srt_index = 1 
+        
+        # 移除了 enumerate，因为我们要自己控制序号
+        for start, end, text in self.iterate_result(result, options):
+            
+            # ===== 新增：整段抹杀触发网 (Drop List) =====
+            # 只要句子中包含这些词（哪怕是部分符合），直接整段连同时间轴一起抛弃
+            drop_list = ["ご視聴ありがとう", "チャンネル登録"] 
+            should_drop = False
+            for drop_word in drop_list:
+                if drop_word in text:  # 核心逻辑：只要包含就触发
+                    should_drop = True
+                    break
+            
+            # 如果触发了抹杀条件，直接中止当前循环，走向下一条字幕
+            if should_drop:
+                continue
+            # ===========================================
+
+            # ===== 保持原有：自定义黑名单过滤网 (净化) =====
+            blacklist = ["【ED】", "【音楽】"]
+            for bad_word in blacklist:
+                text = text.replace(bad_word, "")
+                
+            # ===== 保持原有：强力去重拦截网 =====
             text = text.replace(" ", "").replace("　", "")
-            
-            # 2. 词组级去重 (例如：やめてやめてやめてやめて -> やめてやめてやめて)
             text = re.sub(r'(.+?)\1{3,}', r'\1\1\1', text)
-            
-            # 3. 单字符级去重 (例如：あああああ -> あああ)
             text = re.sub(r'(.)\1{3,}', r'\1\1\1', text)
-            # ==============================
 
-            print(f"{i}\n{start} --> {end}\n{text}\n", file=file, flush=True)
+            # ===== 修改点 2：拦截必须放在写入前面！ =====
+            # 只要清理完发现是空的，直接中止这一轮，不写文件，也不增加序号
+            if not text:
+                continue
 
+            # ===== 修改点 3：一切合规，才正式写入文件 =====
+            print(f"{srt_index}\n{start} --> {end}\n{text}\n", file=file, flush=True)
+            
+            # 成功写入一条，序号才 +1
+            srt_index += 1
+ 
 
 class WriteTSV(ResultWriter):
     """
